@@ -6,6 +6,7 @@ const KEY_HIDE_PLAYLIST = "hidePlaylist";
 const KEY_HIDE_COMMENTS = "hideComments";
 const KEY_HIDE_DANMAKU = "hideDanmaku";
 const KEY_HIDE_THUMBNAILS = "hideThumbnails";
+const KEY_HIDE_VIDEO_INFO = "hideVideoInfo";
 
 function getApi() {
   return globalThis.browser ?? globalThis.chrome;
@@ -67,8 +68,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const checkboxHideComments = document.getElementById("hide-comments");
   const checkboxHideDanmaku = document.getElementById("hide-danmaku");
   const checkboxHideThumbnails = document.getElementById("hide-thumbnails");
+  const checkboxHideVideoInfo = document.getElementById("hide-video-info");
 
-  if (!(checkboxHomeFeed instanceof HTMLInputElement) || !(checkboxSidebar instanceof HTMLInputElement) || !(checkboxEndScreenFeed instanceof HTMLInputElement) || !(checkboxDisableAutoplay instanceof HTMLInputElement) || !(checkboxHidePlaylist instanceof HTMLInputElement) || !(checkboxHideComments instanceof HTMLInputElement) || !(checkboxHideDanmaku instanceof HTMLInputElement) || !(checkboxHideThumbnails instanceof HTMLInputElement)) return;
+  if (!(checkboxHomeFeed instanceof HTMLInputElement) || !(checkboxSidebar instanceof HTMLInputElement) || !(checkboxEndScreenFeed instanceof HTMLInputElement) || !(checkboxDisableAutoplay instanceof HTMLInputElement) || !(checkboxHidePlaylist instanceof HTMLInputElement) || !(checkboxHideComments instanceof HTMLInputElement) || !(checkboxHideDanmaku instanceof HTMLInputElement) || !(checkboxHideThumbnails instanceof HTMLInputElement) || !(checkboxHideVideoInfo instanceof HTMLInputElement)) return;
 
   // Load and initialize home feed setting
   const storedHomeFeed = await storageGet(KEY_HIDE_HOME_FEED);
@@ -134,6 +136,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     await storageSet({ [KEY_HIDE_THUMBNAILS]: true });
   }
 
+  // Load and initialize hide video info setting
+  const storedHideVideoInfo = await storageGet(KEY_HIDE_VIDEO_INFO);
+  const initialHideVideoInfo = typeof storedHideVideoInfo?.[KEY_HIDE_VIDEO_INFO] === "boolean" ? storedHideVideoInfo[KEY_HIDE_VIDEO_INFO] : true;
+  checkboxHideVideoInfo.checked = initialHideVideoInfo;
+  if (typeof storedHideVideoInfo?.[KEY_HIDE_VIDEO_INFO] !== "boolean") {
+    await storageSet({ [KEY_HIDE_VIDEO_INFO]: true });
+  }
+
   // Apply immediately on current tab (no refresh needed).
   await sendSettingToTab("SET_HIDE_HOME_FEED", checkboxHomeFeed.checked);
   await sendSettingToTab("SET_HIDE_SIDEBAR", checkboxSidebar.checked);
@@ -143,6 +153,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await sendSettingToTab("SET_HIDE_COMMENTS", checkboxHideComments.checked);
   await sendSettingToTab("SET_HIDE_DANMAKU", checkboxHideDanmaku.checked);
   await sendSettingToTab("SET_HIDE_THUMBNAILS", checkboxHideThumbnails.checked);
+  await sendSettingToTab("SET_HIDE_VIDEO_INFO", checkboxHideVideoInfo.checked);
 
   checkboxHomeFeed.addEventListener("change", async () => {
     await storageSet({ [KEY_HIDE_HOME_FEED]: checkboxHomeFeed.checked });
@@ -182,6 +193,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   checkboxHideThumbnails.addEventListener("change", async () => {
     await storageSet({ [KEY_HIDE_THUMBNAILS]: checkboxHideThumbnails.checked });
     await sendSettingToTab("SET_HIDE_THUMBNAILS", checkboxHideThumbnails.checked);
+  });
+
+  checkboxHideVideoInfo.addEventListener("change", async () => {
+    await storageSet({ [KEY_HIDE_VIDEO_INFO]: checkboxHideVideoInfo.checked });
+    await sendSettingToTab("SET_HIDE_VIDEO_INFO", checkboxHideVideoInfo.checked);
   });
 });
 

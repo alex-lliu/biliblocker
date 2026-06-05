@@ -8,12 +8,14 @@
   const KEY_HIDE_COMMENTS = "hideComments";
   const KEY_HIDE_DANMAKU = "hideDanmaku";
   const KEY_HIDE_THUMBNAILS = "hideThumbnails";
+  const KEY_HIDE_VIDEO_INFO = "hideVideoInfo";
   const STYLE_ID_HIDE_FEED2 = "biliblocker-hide-feed2";
   const STYLE_ID_HIDE_SIDEBAR = "biliblocker-hide-sidebar";
   const STYLE_ID_HIDE_END_SCREEN_FEED = "biliblocker-hide-end-screen-feed";
   const STYLE_ID_HIDE_PLAYLIST = "biliblocker-hide-playlist";
   const STYLE_ID_HIDE_COMMENTS = "biliblocker-hide-comments";
   const STYLE_ID_HIDE_THUMBNAILS = "biliblocker-hide-thumbnails";
+  const STYLE_ID_HIDE_VIDEO_INFO = "biliblocker-hide-video-info";
   let enabledHomeFeed = true;
   let enabledSidebar = true;
   let enabledEndScreenFeed = true;
@@ -23,6 +25,7 @@
   let enabledHideDanmaku = true;
   let danmakuObserver = null;
   let enabledHideThumbnails = true;
+  let enabledHideVideoInfo = true;
   let autoplayObserver = null;
 
   function getApi() {
@@ -86,6 +89,19 @@
     const style = document.createElement("style");
     style.id = STYLE_ID_HIDE_PLAYLIST;
     style.textContent = `.video-pod { display: none !important; }`;
+    document.documentElement.appendChild(style);
+  }
+
+  function setVideoInfoHidden(hidden) {
+    const existing = document.getElementById(STYLE_ID_HIDE_VIDEO_INFO);
+    if (!hidden) {
+      if (existing) existing.remove();
+      return;
+    }
+    if (existing) return;
+    const style = document.createElement("style");
+    style.id = STYLE_ID_HIDE_VIDEO_INFO;
+    style.textContent = `#v_desc { display: none !important; }`;
     document.documentElement.appendChild(style);
   }
 
@@ -159,6 +175,7 @@
     const storedHideComments = await storageGet(KEY_HIDE_COMMENTS);
     const storedHideDanmaku = await storageGet(KEY_HIDE_DANMAKU);
     const storedHideThumbnails = await storageGet(KEY_HIDE_THUMBNAILS);
+    const storedHideVideoInfo = await storageGet(KEY_HIDE_VIDEO_INFO);
 
     const enabledHomeFeedValue =
       typeof storedHomeFeed?.[KEY_HIDE_HOME_FEED] === "boolean"
@@ -200,6 +217,11 @@
         ? storedHideThumbnails[KEY_HIDE_THUMBNAILS]
         : true;
 
+    const enabledHideVideoInfoValue =
+      typeof storedHideVideoInfo?.[KEY_HIDE_VIDEO_INFO] === "boolean"
+        ? storedHideVideoInfo[KEY_HIDE_VIDEO_INFO]
+        : true;
+
     applyHomeFeedEnabled(!!enabledHomeFeedValue);
     applySidebarEnabled(!!enabledSidebarValue);
     applyEndScreenFeedEnabled(!!enabledEndScreenFeedValue);
@@ -208,6 +230,7 @@
     applyCommentsEnabled(!!enabledHideCommentsValue);
     applyDanmakuEnabled(!!enabledHideDanmakuValue);
     applyThumbnailsEnabled(!!enabledHideThumbnailsValue);
+    applyVideoInfoEnabled(!!enabledHideVideoInfoValue);
   }
 
   function initMessageListener() {
@@ -231,6 +254,8 @@
         applyDanmakuEnabled(!!msg.enabled);
       } else if (msg.type === "SET_HIDE_THUMBNAILS") {
         applyThumbnailsEnabled(!!msg.enabled);
+      } else if (msg.type === "SET_HIDE_VIDEO_INFO") {
+        applyVideoInfoEnabled(!!msg.enabled);
       }
     });
   }
@@ -288,6 +313,11 @@
     if (!danmakuObserver) return;
     danmakuObserver.disconnect();
     danmakuObserver = null;
+  }
+
+  function applyVideoInfoEnabled(nextEnabled) {
+    enabledHideVideoInfo = !!nextEnabled;
+    setVideoInfoHidden(enabledHideVideoInfo);
   }
 
   function applyThumbnailsEnabled(nextEnabled) {
