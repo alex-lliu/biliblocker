@@ -5,6 +5,7 @@ const KEY_DISABLE_AUTOPLAY = "disableAutoplay";
 const KEY_HIDE_PLAYLIST = "hidePlaylist";
 const KEY_HIDE_COMMENTS = "hideComments";
 const KEY_HIDE_DANMAKU = "hideDanmaku";
+const KEY_HIDE_THUMBNAILS = "hideThumbnails";
 
 function getApi() {
   return globalThis.browser ?? globalThis.chrome;
@@ -65,8 +66,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const checkboxHidePlaylist = document.getElementById("hide-playlist");
   const checkboxHideComments = document.getElementById("hide-comments");
   const checkboxHideDanmaku = document.getElementById("hide-danmaku");
+  const checkboxHideThumbnails = document.getElementById("hide-thumbnails");
 
-  if (!(checkboxHomeFeed instanceof HTMLInputElement) || !(checkboxSidebar instanceof HTMLInputElement) || !(checkboxEndScreenFeed instanceof HTMLInputElement) || !(checkboxDisableAutoplay instanceof HTMLInputElement) || !(checkboxHidePlaylist instanceof HTMLInputElement) || !(checkboxHideComments instanceof HTMLInputElement) || !(checkboxHideDanmaku instanceof HTMLInputElement)) return;
+  if (!(checkboxHomeFeed instanceof HTMLInputElement) || !(checkboxSidebar instanceof HTMLInputElement) || !(checkboxEndScreenFeed instanceof HTMLInputElement) || !(checkboxDisableAutoplay instanceof HTMLInputElement) || !(checkboxHidePlaylist instanceof HTMLInputElement) || !(checkboxHideComments instanceof HTMLInputElement) || !(checkboxHideDanmaku instanceof HTMLInputElement) || !(checkboxHideThumbnails instanceof HTMLInputElement)) return;
 
   // Load and initialize home feed setting
   const storedHomeFeed = await storageGet(KEY_HIDE_HOME_FEED);
@@ -124,6 +126,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     await storageSet({ [KEY_HIDE_DANMAKU]: true });
   }
 
+  // Load and initialize hide thumbnails setting
+  const storedHideThumbnails = await storageGet(KEY_HIDE_THUMBNAILS);
+  const initialHideThumbnails = typeof storedHideThumbnails?.[KEY_HIDE_THUMBNAILS] === "boolean" ? storedHideThumbnails[KEY_HIDE_THUMBNAILS] : true;
+  checkboxHideThumbnails.checked = initialHideThumbnails;
+  if (typeof storedHideThumbnails?.[KEY_HIDE_THUMBNAILS] !== "boolean") {
+    await storageSet({ [KEY_HIDE_THUMBNAILS]: true });
+  }
+
   // Apply immediately on current tab (no refresh needed).
   await sendSettingToTab("SET_HIDE_HOME_FEED", checkboxHomeFeed.checked);
   await sendSettingToTab("SET_HIDE_SIDEBAR", checkboxSidebar.checked);
@@ -132,6 +142,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await sendSettingToTab("SET_HIDE_PLAYLIST", checkboxHidePlaylist.checked);
   await sendSettingToTab("SET_HIDE_COMMENTS", checkboxHideComments.checked);
   await sendSettingToTab("SET_HIDE_DANMAKU", checkboxHideDanmaku.checked);
+  await sendSettingToTab("SET_HIDE_THUMBNAILS", checkboxHideThumbnails.checked);
 
   checkboxHomeFeed.addEventListener("change", async () => {
     await storageSet({ [KEY_HIDE_HOME_FEED]: checkboxHomeFeed.checked });
@@ -166,6 +177,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   checkboxHideDanmaku.addEventListener("change", async () => {
     await storageSet({ [KEY_HIDE_DANMAKU]: checkboxHideDanmaku.checked });
     await sendSettingToTab("SET_HIDE_DANMAKU", checkboxHideDanmaku.checked);
+  });
+
+  checkboxHideThumbnails.addEventListener("change", async () => {
+    await storageSet({ [KEY_HIDE_THUMBNAILS]: checkboxHideThumbnails.checked });
+    await sendSettingToTab("SET_HIDE_THUMBNAILS", checkboxHideThumbnails.checked);
   });
 });
 

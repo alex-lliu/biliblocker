@@ -7,11 +7,13 @@
   const KEY_HIDE_PLAYLIST = "hidePlaylist";
   const KEY_HIDE_COMMENTS = "hideComments";
   const KEY_HIDE_DANMAKU = "hideDanmaku";
+  const KEY_HIDE_THUMBNAILS = "hideThumbnails";
   const STYLE_ID_HIDE_FEED2 = "biliblocker-hide-feed2";
   const STYLE_ID_HIDE_SIDEBAR = "biliblocker-hide-sidebar";
   const STYLE_ID_HIDE_END_SCREEN_FEED = "biliblocker-hide-end-screen-feed";
   const STYLE_ID_HIDE_PLAYLIST = "biliblocker-hide-playlist";
   const STYLE_ID_HIDE_COMMENTS = "biliblocker-hide-comments";
+  const STYLE_ID_HIDE_THUMBNAILS = "biliblocker-hide-thumbnails";
   let enabledHomeFeed = true;
   let enabledSidebar = true;
   let enabledEndScreenFeed = true;
@@ -20,6 +22,7 @@
   let enabledHideComments = true;
   let enabledHideDanmaku = true;
   let danmakuObserver = null;
+  let enabledHideThumbnails = true;
   let autoplayObserver = null;
 
   function getApi() {
@@ -86,6 +89,19 @@
     document.documentElement.appendChild(style);
   }
 
+  function setThumbnailsHidden(hidden) {
+    const existing = document.getElementById(STYLE_ID_HIDE_THUMBNAILS);
+    if (!hidden) {
+      if (existing) existing.remove();
+      return;
+    }
+    if (existing) return;
+    const style = document.createElement("style");
+    style.id = STYLE_ID_HIDE_THUMBNAILS;
+    style.textContent = `.bili-video-card__image--wrap { background: black !important; } .bili-video-card__cover img { visibility: hidden !important; }`;
+    document.documentElement.appendChild(style);
+  }
+
   function setCommentsHidden(hidden) {
     const existing = document.getElementById(STYLE_ID_HIDE_COMMENTS);
     if (!hidden) {
@@ -142,6 +158,7 @@
     const storedHidePlaylist = await storageGet(KEY_HIDE_PLAYLIST);
     const storedHideComments = await storageGet(KEY_HIDE_COMMENTS);
     const storedHideDanmaku = await storageGet(KEY_HIDE_DANMAKU);
+    const storedHideThumbnails = await storageGet(KEY_HIDE_THUMBNAILS);
 
     const enabledHomeFeedValue =
       typeof storedHomeFeed?.[KEY_HIDE_HOME_FEED] === "boolean"
@@ -178,6 +195,11 @@
         ? storedHideDanmaku[KEY_HIDE_DANMAKU]
         : true;
 
+    const enabledHideThumbnailsValue =
+      typeof storedHideThumbnails?.[KEY_HIDE_THUMBNAILS] === "boolean"
+        ? storedHideThumbnails[KEY_HIDE_THUMBNAILS]
+        : true;
+
     applyHomeFeedEnabled(!!enabledHomeFeedValue);
     applySidebarEnabled(!!enabledSidebarValue);
     applyEndScreenFeedEnabled(!!enabledEndScreenFeedValue);
@@ -185,6 +207,7 @@
     applyPlaylistEnabled(!!enabledHidePlaylistValue);
     applyCommentsEnabled(!!enabledHideCommentsValue);
     applyDanmakuEnabled(!!enabledHideDanmakuValue);
+    applyThumbnailsEnabled(!!enabledHideThumbnailsValue);
   }
 
   function initMessageListener() {
@@ -206,6 +229,8 @@
         applyCommentsEnabled(!!msg.enabled);
       } else if (msg.type === "SET_HIDE_DANMAKU") {
         applyDanmakuEnabled(!!msg.enabled);
+      } else if (msg.type === "SET_HIDE_THUMBNAILS") {
+        applyThumbnailsEnabled(!!msg.enabled);
       }
     });
   }
@@ -263,6 +288,11 @@
     if (!danmakuObserver) return;
     danmakuObserver.disconnect();
     danmakuObserver = null;
+  }
+
+  function applyThumbnailsEnabled(nextEnabled) {
+    enabledHideThumbnails = !!nextEnabled;
+    setThumbnailsHidden(enabledHideThumbnails);
   }
 
   function applyDanmakuEnabled(nextEnabled) {
