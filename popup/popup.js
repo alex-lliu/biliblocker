@@ -3,6 +3,7 @@ const KEY_HIDE_SIDEBAR = "hideSidebar";
 const KEY_HIDE_END_SCREEN_FEED = "hideEndScreenFeed";
 const KEY_DISABLE_AUTOPLAY = "disableAutoplay";
 const KEY_HIDE_PLAYLIST = "hidePlaylist";
+const KEY_HIDE_COMMENTS = "hideComments";
 
 function getApi() {
   return globalThis.browser ?? globalThis.chrome;
@@ -61,8 +62,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const checkboxEndScreenFeed = document.getElementById("hide-end-screen-feed");
   const checkboxDisableAutoplay = document.getElementById("disable-autoplay");
   const checkboxHidePlaylist = document.getElementById("hide-playlist");
+  const checkboxHideComments = document.getElementById("hide-comments");
 
-  if (!(checkboxHomeFeed instanceof HTMLInputElement) || !(checkboxSidebar instanceof HTMLInputElement) || !(checkboxEndScreenFeed instanceof HTMLInputElement) || !(checkboxDisableAutoplay instanceof HTMLInputElement) || !(checkboxHidePlaylist instanceof HTMLInputElement)) return;
+  if (!(checkboxHomeFeed instanceof HTMLInputElement) || !(checkboxSidebar instanceof HTMLInputElement) || !(checkboxEndScreenFeed instanceof HTMLInputElement) || !(checkboxDisableAutoplay instanceof HTMLInputElement) || !(checkboxHidePlaylist instanceof HTMLInputElement) || !(checkboxHideComments instanceof HTMLInputElement)) return;
 
   // Load and initialize home feed setting
   const storedHomeFeed = await storageGet(KEY_HIDE_HOME_FEED);
@@ -104,12 +106,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     await storageSet({ [KEY_HIDE_PLAYLIST]: true });
   }
 
+  // Load and initialize hide comments setting
+  const storedHideComments = await storageGet(KEY_HIDE_COMMENTS);
+  const initialHideComments = typeof storedHideComments?.[KEY_HIDE_COMMENTS] === "boolean" ? storedHideComments[KEY_HIDE_COMMENTS] : true;
+  checkboxHideComments.checked = initialHideComments;
+  if (typeof storedHideComments?.[KEY_HIDE_COMMENTS] !== "boolean") {
+    await storageSet({ [KEY_HIDE_COMMENTS]: true });
+  }
+
   // Apply immediately on current tab (no refresh needed).
   await sendSettingToTab("SET_HIDE_HOME_FEED", checkboxHomeFeed.checked);
   await sendSettingToTab("SET_HIDE_SIDEBAR", checkboxSidebar.checked);
   await sendSettingToTab("SET_HIDE_END_SCREEN_FEED", checkboxEndScreenFeed.checked);
   await sendSettingToTab("SET_DISABLE_AUTOPLAY", checkboxDisableAutoplay.checked);
   await sendSettingToTab("SET_HIDE_PLAYLIST", checkboxHidePlaylist.checked);
+  await sendSettingToTab("SET_HIDE_COMMENTS", checkboxHideComments.checked);
 
   checkboxHomeFeed.addEventListener("change", async () => {
     await storageSet({ [KEY_HIDE_HOME_FEED]: checkboxHomeFeed.checked });
@@ -134,6 +145,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   checkboxHidePlaylist.addEventListener("change", async () => {
     await storageSet({ [KEY_HIDE_PLAYLIST]: checkboxHidePlaylist.checked });
     await sendSettingToTab("SET_HIDE_PLAYLIST", checkboxHidePlaylist.checked);
+  });
+
+  checkboxHideComments.addEventListener("change", async () => {
+    await storageSet({ [KEY_HIDE_COMMENTS]: checkboxHideComments.checked });
+    await sendSettingToTab("SET_HIDE_COMMENTS", checkboxHideComments.checked);
   });
 });
 

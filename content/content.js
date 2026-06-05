@@ -5,15 +5,18 @@
   const KEY_HIDE_END_SCREEN_FEED = "hideEndScreenFeed";
   const KEY_DISABLE_AUTOPLAY = "disableAutoplay";
   const KEY_HIDE_PLAYLIST = "hidePlaylist";
+  const KEY_HIDE_COMMENTS = "hideComments";
   const STYLE_ID_HIDE_FEED2 = "biliblocker-hide-feed2";
   const STYLE_ID_HIDE_SIDEBAR = "biliblocker-hide-sidebar";
   const STYLE_ID_HIDE_END_SCREEN_FEED = "biliblocker-hide-end-screen-feed";
   const STYLE_ID_HIDE_PLAYLIST = "biliblocker-hide-playlist";
+  const STYLE_ID_HIDE_COMMENTS = "biliblocker-hide-comments";
   let enabledHomeFeed = true;
   let enabledSidebar = true;
   let enabledEndScreenFeed = true;
   let enabledDisableAutoplay = true;
   let enabledHidePlaylist = true;
+  let enabledHideComments = true;
   let autoplayObserver = null;
 
   function getApi() {
@@ -80,6 +83,19 @@
     document.documentElement.appendChild(style);
   }
 
+  function setCommentsHidden(hidden) {
+    const existing = document.getElementById(STYLE_ID_HIDE_COMMENTS);
+    if (!hidden) {
+      if (existing) existing.remove();
+      return;
+    }
+    if (existing) return;
+    const style = document.createElement("style");
+    style.id = STYLE_ID_HIDE_COMMENTS;
+    style.textContent = `#commentapp { display: none !important; }`;
+    document.documentElement.appendChild(style);
+  }
+
   function toggleAutoplaySwitch(enabled) {
     // When enabled: find .switch-btn.on and remove "on" class
     // When disabled: find .switch-btn and add "on" class
@@ -121,6 +137,7 @@
     const storedEndScreenFeed = await storageGet(KEY_HIDE_END_SCREEN_FEED);
     const storedDisableAutoplay = await storageGet(KEY_DISABLE_AUTOPLAY);
     const storedHidePlaylist = await storageGet(KEY_HIDE_PLAYLIST);
+    const storedHideComments = await storageGet(KEY_HIDE_COMMENTS);
 
     const enabledHomeFeedValue =
       typeof storedHomeFeed?.[KEY_HIDE_HOME_FEED] === "boolean"
@@ -147,11 +164,17 @@
         ? storedHidePlaylist[KEY_HIDE_PLAYLIST]
         : true;
 
+    const enabledHideCommentsValue =
+      typeof storedHideComments?.[KEY_HIDE_COMMENTS] === "boolean"
+        ? storedHideComments[KEY_HIDE_COMMENTS]
+        : true;
+
     applyHomeFeedEnabled(!!enabledHomeFeedValue);
     applySidebarEnabled(!!enabledSidebarValue);
     applyEndScreenFeedEnabled(!!enabledEndScreenFeedValue);
     applyDisableAutoplayEnabled(!!enabledDisableAutoplayValue);
     applyPlaylistEnabled(!!enabledHidePlaylistValue);
+    applyCommentsEnabled(!!enabledHideCommentsValue);
   }
 
   function initMessageListener() {
@@ -169,6 +192,8 @@
         applyDisableAutoplayEnabled(!!msg.enabled);
       } else if (msg.type === "SET_HIDE_PLAYLIST") {
         applyPlaylistEnabled(!!msg.enabled);
+      } else if (msg.type === "SET_HIDE_COMMENTS") {
+        applyCommentsEnabled(!!msg.enabled);
       }
     });
   }
@@ -202,6 +227,11 @@
   function applyPlaylistEnabled(nextEnabled) {
     enabledHidePlaylist = !!nextEnabled;
     setPlaylistHidden(enabledHidePlaylist);
+  }
+
+  function applyCommentsEnabled(nextEnabled) {
+    enabledHideComments = !!nextEnabled;
+    setCommentsHidden(enabledHideComments);
   }
 
   function init() {
