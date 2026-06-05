@@ -6,6 +6,7 @@
   const KEY_DISABLE_AUTOPLAY = "disableAutoplay";
   const KEY_HIDE_PLAYLIST = "hidePlaylist";
   const KEY_HIDE_COMMENTS = "hideComments";
+  const KEY_HIDE_DANMAKU = "hideDanmaku";
   const STYLE_ID_HIDE_FEED2 = "biliblocker-hide-feed2";
   const STYLE_ID_HIDE_SIDEBAR = "biliblocker-hide-sidebar";
   const STYLE_ID_HIDE_END_SCREEN_FEED = "biliblocker-hide-end-screen-feed";
@@ -17,6 +18,8 @@
   let enabledDisableAutoplay = true;
   let enabledHidePlaylist = true;
   let enabledHideComments = true;
+  let enabledHideDanmaku = true;
+  let danmakuObserver = null;
   let autoplayObserver = null;
 
   function getApi() {
@@ -138,6 +141,7 @@
     const storedDisableAutoplay = await storageGet(KEY_DISABLE_AUTOPLAY);
     const storedHidePlaylist = await storageGet(KEY_HIDE_PLAYLIST);
     const storedHideComments = await storageGet(KEY_HIDE_COMMENTS);
+    const storedHideDanmaku = await storageGet(KEY_HIDE_DANMAKU);
 
     const enabledHomeFeedValue =
       typeof storedHomeFeed?.[KEY_HIDE_HOME_FEED] === "boolean"
@@ -169,12 +173,18 @@
         ? storedHideComments[KEY_HIDE_COMMENTS]
         : true;
 
+    const enabledHideDanmakuValue =
+      typeof storedHideDanmaku?.[KEY_HIDE_DANMAKU] === "boolean"
+        ? storedHideDanmaku[KEY_HIDE_DANMAKU]
+        : true;
+
     applyHomeFeedEnabled(!!enabledHomeFeedValue);
     applySidebarEnabled(!!enabledSidebarValue);
     applyEndScreenFeedEnabled(!!enabledEndScreenFeedValue);
     applyDisableAutoplayEnabled(!!enabledDisableAutoplayValue);
     applyPlaylistEnabled(!!enabledHidePlaylistValue);
     applyCommentsEnabled(!!enabledHideCommentsValue);
+    applyDanmakuEnabled(!!enabledHideDanmakuValue);
   }
 
   function initMessageListener() {
@@ -194,6 +204,8 @@
         applyPlaylistEnabled(!!msg.enabled);
       } else if (msg.type === "SET_HIDE_COMMENTS") {
         applyCommentsEnabled(!!msg.enabled);
+      } else if (msg.type === "SET_HIDE_DANMAKU") {
+        applyDanmakuEnabled(!!msg.enabled);
       }
     });
   }
@@ -232,6 +244,35 @@
   function applyCommentsEnabled(nextEnabled) {
     enabledHideComments = !!nextEnabled;
     setCommentsHidden(enabledHideComments);
+  }
+
+  function turnOffDanmaku() {
+    const inputs = document.querySelectorAll(".bui-danmaku-switch-input:checked");
+    inputs.forEach((el) => el.click());
+  }
+
+  function startObservingDanmaku() {
+    if (danmakuObserver) return;
+    danmakuObserver = new MutationObserver(() => {
+      if (enabledHideDanmaku) turnOffDanmaku();
+    });
+    danmakuObserver.observe(document.documentElement, { childList: true, subtree: true });
+  }
+
+  function stopObservingDanmaku() {
+    if (!danmakuObserver) return;
+    danmakuObserver.disconnect();
+    danmakuObserver = null;
+  }
+
+  function applyDanmakuEnabled(nextEnabled) {
+    enabledHideDanmaku = !!nextEnabled;
+    if (enabledHideDanmaku) {
+      turnOffDanmaku();
+      startObservingDanmaku();
+    } else {
+      stopObservingDanmaku();
+    }
   }
 
   function init() {
