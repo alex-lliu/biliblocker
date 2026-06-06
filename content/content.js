@@ -1,5 +1,5 @@
 (() => {
-  // Toggle hiding home feed (feed2), sidebar (rcmd-tab), end screen feed (bpx-player-ending-wrap), and disable autoplay.
+  // Hides distracting elements on bilibili.com. Each feature is toggled independently via the popup.
   const KEY_HIDE_HOME_FEED = "hideHomeFeed";
   const KEY_HIDE_SIDEBAR = "hideSidebar";
   const KEY_HIDE_END_SCREEN_FEED = "hideEndScreenFeed";
@@ -215,91 +215,27 @@
   }
 
   async function initSettings() {
-    const storedHomeFeed = await storageGet(KEY_HIDE_HOME_FEED);
-    const storedSidebar = await storageGet(KEY_HIDE_SIDEBAR);
-    const storedEndScreenFeed = await storageGet(KEY_HIDE_END_SCREEN_FEED);
-    const storedDisableAutoplay = await storageGet(KEY_DISABLE_AUTOPLAY);
-    const storedHidePlaylist = await storageGet(KEY_HIDE_PLAYLIST);
-    const storedHideComments = await storageGet(KEY_HIDE_COMMENTS);
-    const storedHideDanmaku = await storageGet(KEY_HIDE_DANMAKU);
-    const storedHideThumbnails = await storageGet(KEY_HIDE_THUMBNAILS);
-    const storedHideVideoInfo = await storageGet(KEY_HIDE_VIDEO_INFO);
-    const storedHideChannelInfo = await storageGet(KEY_HIDE_CHANNEL_INFO);
-    const storedHideAds = await storageGet(KEY_HIDE_ADS);
-    const storedHideHeader = await storageGet(KEY_HIDE_HEADER);
+    const stored = await storageGet([
+      KEY_HIDE_HOME_FEED, KEY_HIDE_SIDEBAR, KEY_HIDE_END_SCREEN_FEED,
+      KEY_DISABLE_AUTOPLAY, KEY_HIDE_PLAYLIST, KEY_HIDE_COMMENTS,
+      KEY_HIDE_DANMAKU, KEY_HIDE_THUMBNAILS, KEY_HIDE_VIDEO_INFO,
+      KEY_HIDE_CHANNEL_INFO, KEY_HIDE_ADS, KEY_HIDE_HEADER,
+    ]);
 
-    const enabledHomeFeedValue =
-      typeof storedHomeFeed?.[KEY_HIDE_HOME_FEED] === "boolean"
-        ? storedHomeFeed[KEY_HIDE_HOME_FEED]
-        : true;
+    const val = (key) => typeof stored?.[key] === "boolean" ? stored[key] : true;
 
-    const enabledSidebarValue =
-      typeof storedSidebar?.[KEY_HIDE_SIDEBAR] === "boolean"
-        ? storedSidebar[KEY_HIDE_SIDEBAR]
-        : true;
-
-    const enabledEndScreenFeedValue =
-      typeof storedEndScreenFeed?.[KEY_HIDE_END_SCREEN_FEED] === "boolean"
-        ? storedEndScreenFeed[KEY_HIDE_END_SCREEN_FEED]
-        : true;
-
-    const enabledDisableAutoplayValue =
-      typeof storedDisableAutoplay?.[KEY_DISABLE_AUTOPLAY] === "boolean"
-        ? storedDisableAutoplay[KEY_DISABLE_AUTOPLAY]
-        : true;
-
-    const enabledHidePlaylistValue =
-      typeof storedHidePlaylist?.[KEY_HIDE_PLAYLIST] === "boolean"
-        ? storedHidePlaylist[KEY_HIDE_PLAYLIST]
-        : true;
-
-    const enabledHideCommentsValue =
-      typeof storedHideComments?.[KEY_HIDE_COMMENTS] === "boolean"
-        ? storedHideComments[KEY_HIDE_COMMENTS]
-        : true;
-
-    const enabledHideDanmakuValue =
-      typeof storedHideDanmaku?.[KEY_HIDE_DANMAKU] === "boolean"
-        ? storedHideDanmaku[KEY_HIDE_DANMAKU]
-        : true;
-
-    const enabledHideThumbnailsValue =
-      typeof storedHideThumbnails?.[KEY_HIDE_THUMBNAILS] === "boolean"
-        ? storedHideThumbnails[KEY_HIDE_THUMBNAILS]
-        : true;
-
-    const enabledHideVideoInfoValue =
-      typeof storedHideVideoInfo?.[KEY_HIDE_VIDEO_INFO] === "boolean"
-        ? storedHideVideoInfo[KEY_HIDE_VIDEO_INFO]
-        : true;
-
-    const enabledHideChannelInfoValue =
-      typeof storedHideChannelInfo?.[KEY_HIDE_CHANNEL_INFO] === "boolean"
-        ? storedHideChannelInfo[KEY_HIDE_CHANNEL_INFO]
-        : true;
-
-    const enabledHideAdsValue =
-      typeof storedHideAds?.[KEY_HIDE_ADS] === "boolean"
-        ? storedHideAds[KEY_HIDE_ADS]
-        : true;
-
-    const enabledHideHeaderValue =
-      typeof storedHideHeader?.[KEY_HIDE_HEADER] === "boolean"
-        ? storedHideHeader[KEY_HIDE_HEADER]
-        : true;
-
-    applyHomeFeedEnabled(!!enabledHomeFeedValue);
-    applySidebarEnabled(!!enabledSidebarValue);
-    applyEndScreenFeedEnabled(!!enabledEndScreenFeedValue);
-    applyDisableAutoplayEnabled(!!enabledDisableAutoplayValue);
-    applyPlaylistEnabled(!!enabledHidePlaylistValue);
-    applyCommentsEnabled(!!enabledHideCommentsValue);
-    applyDanmakuEnabled(!!enabledHideDanmakuValue);
-    applyThumbnailsEnabled(!!enabledHideThumbnailsValue);
-    applyVideoInfoEnabled(!!enabledHideVideoInfoValue);
-    applyChannelInfoEnabled(!!enabledHideChannelInfoValue);
-    applyAdsEnabled(!!enabledHideAdsValue);
-    applyHeaderEnabled(!!enabledHideHeaderValue);
+    applyHomeFeedEnabled(val(KEY_HIDE_HOME_FEED));
+    applySidebarEnabled(val(KEY_HIDE_SIDEBAR));
+    applyEndScreenFeedEnabled(val(KEY_HIDE_END_SCREEN_FEED));
+    applyDisableAutoplayEnabled(val(KEY_DISABLE_AUTOPLAY));
+    applyPlaylistEnabled(val(KEY_HIDE_PLAYLIST));
+    applyCommentsEnabled(val(KEY_HIDE_COMMENTS));
+    applyDanmakuEnabled(val(KEY_HIDE_DANMAKU));
+    applyThumbnailsEnabled(val(KEY_HIDE_THUMBNAILS));
+    applyVideoInfoEnabled(val(KEY_HIDE_VIDEO_INFO));
+    applyChannelInfoEnabled(val(KEY_HIDE_CHANNEL_INFO));
+    applyAdsEnabled(val(KEY_HIDE_ADS));
+    applyHeaderEnabled(val(KEY_HIDE_HEADER));
   }
 
   function initMessageListener() {

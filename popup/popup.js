@@ -11,16 +11,23 @@ const KEY_HIDE_CHANNEL_INFO = "hideChannelInfo";
 const KEY_HIDE_ADS = "hideAds";
 const KEY_HIDE_HEADER = "hideHeader";
 
+const ALL_KEYS = [
+  KEY_HIDE_HOME_FEED, KEY_HIDE_SIDEBAR, KEY_HIDE_END_SCREEN_FEED,
+  KEY_DISABLE_AUTOPLAY, KEY_HIDE_PLAYLIST, KEY_HIDE_COMMENTS,
+  KEY_HIDE_DANMAKU, KEY_HIDE_THUMBNAILS, KEY_HIDE_VIDEO_INFO,
+  KEY_HIDE_CHANNEL_INFO, KEY_HIDE_ADS, KEY_HIDE_HEADER,
+];
+
 function getApi() {
   return globalThis.browser ?? globalThis.chrome;
 }
 
-async function storageGet(key) {
+async function storageGet(keys) {
   const api = getApi();
   if (!api?.storage?.local?.get) return {};
-  const res = api.storage.local.get(key);
+  const res = api.storage.local.get(keys);
   if (res && typeof res.then === "function") return await res;
-  return await new Promise((resolve) => api.storage.local.get(key, resolve));
+  return await new Promise((resolve) => api.storage.local.get(keys, resolve));
 }
 
 async function storageSet(obj) {
@@ -51,17 +58,6 @@ async function sendSettingToTab(type, enabled) {
   }
 }
 
-async function sendSettingToBackground(hideHomeFeed) {
-  const api = getApi();
-  if (!api?.runtime?.sendMessage) return;
-  try {
-    const res = api.runtime.sendMessage({ type: "SET_HIDE_HOME_FEED", enabled: hideHomeFeed });
-    if (res && typeof res.then === "function") await res;
-  } catch (_) {
-    // no-op
-  }
-}
-
 document.addEventListener("DOMContentLoaded", async () => {
   const checkboxHomeFeed = document.getElementById("hide-home-feed");
   const checkboxSidebar = document.getElementById("hide-sidebar");
@@ -76,105 +72,47 @@ document.addEventListener("DOMContentLoaded", async () => {
   const checkboxHideAds = document.getElementById("hide-ads");
   const checkboxHideHeader = document.getElementById("hide-header");
 
-  if (!(checkboxHomeFeed instanceof HTMLInputElement) || !(checkboxSidebar instanceof HTMLInputElement) || !(checkboxEndScreenFeed instanceof HTMLInputElement) || !(checkboxDisableAutoplay instanceof HTMLInputElement) || !(checkboxHidePlaylist instanceof HTMLInputElement) || !(checkboxHideComments instanceof HTMLInputElement) || !(checkboxHideDanmaku instanceof HTMLInputElement) || !(checkboxHideThumbnails instanceof HTMLInputElement) || !(checkboxHideVideoInfo instanceof HTMLInputElement) || !(checkboxHideChannelInfo instanceof HTMLInputElement) || !(checkboxHideAds instanceof HTMLInputElement) || !(checkboxHideHeader instanceof HTMLInputElement)) return;
+  if (
+    !(checkboxHomeFeed instanceof HTMLInputElement) ||
+    !(checkboxSidebar instanceof HTMLInputElement) ||
+    !(checkboxEndScreenFeed instanceof HTMLInputElement) ||
+    !(checkboxDisableAutoplay instanceof HTMLInputElement) ||
+    !(checkboxHidePlaylist instanceof HTMLInputElement) ||
+    !(checkboxHideComments instanceof HTMLInputElement) ||
+    !(checkboxHideDanmaku instanceof HTMLInputElement) ||
+    !(checkboxHideThumbnails instanceof HTMLInputElement) ||
+    !(checkboxHideVideoInfo instanceof HTMLInputElement) ||
+    !(checkboxHideChannelInfo instanceof HTMLInputElement) ||
+    !(checkboxHideAds instanceof HTMLInputElement) ||
+    !(checkboxHideHeader instanceof HTMLInputElement)
+  ) return;
 
-  // Load and initialize home feed setting
-  const storedHomeFeed = await storageGet(KEY_HIDE_HOME_FEED);
-  const initialHomeFeed = typeof storedHomeFeed?.[KEY_HIDE_HOME_FEED] === "boolean" ? storedHomeFeed[KEY_HIDE_HOME_FEED] : true;
-  checkboxHomeFeed.checked = initialHomeFeed;
-  if (typeof storedHomeFeed?.[KEY_HIDE_HOME_FEED] !== "boolean") {
-    await storageSet({ [KEY_HIDE_HOME_FEED]: true });
+  // Load all settings in one batch read.
+  const stored = await storageGet(ALL_KEYS);
+  const val = (key) => typeof stored?.[key] === "boolean" ? stored[key] : true;
+
+  // Set checkbox states from storage (default true).
+  checkboxHomeFeed.checked = val(KEY_HIDE_HOME_FEED);
+  checkboxSidebar.checked = val(KEY_HIDE_SIDEBAR);
+  checkboxEndScreenFeed.checked = val(KEY_HIDE_END_SCREEN_FEED);
+  checkboxDisableAutoplay.checked = val(KEY_DISABLE_AUTOPLAY);
+  checkboxHidePlaylist.checked = val(KEY_HIDE_PLAYLIST);
+  checkboxHideComments.checked = val(KEY_HIDE_COMMENTS);
+  checkboxHideDanmaku.checked = val(KEY_HIDE_DANMAKU);
+  checkboxHideThumbnails.checked = val(KEY_HIDE_THUMBNAILS);
+  checkboxHideVideoInfo.checked = val(KEY_HIDE_VIDEO_INFO);
+  checkboxHideChannelInfo.checked = val(KEY_HIDE_CHANNEL_INFO);
+  checkboxHideAds.checked = val(KEY_HIDE_ADS);
+  checkboxHideHeader.checked = val(KEY_HIDE_HEADER);
+
+  // Write defaults for any keys not yet in storage (one batch write).
+  const defaults = {};
+  for (const key of ALL_KEYS) {
+    if (typeof stored?.[key] !== "boolean") defaults[key] = true;
   }
+  if (Object.keys(defaults).length > 0) await storageSet(defaults);
 
-  // Load and initialize sidebar setting
-  const storedSidebar = await storageGet(KEY_HIDE_SIDEBAR);
-  const initialSidebar = typeof storedSidebar?.[KEY_HIDE_SIDEBAR] === "boolean" ? storedSidebar[KEY_HIDE_SIDEBAR] : true;
-  checkboxSidebar.checked = initialSidebar;
-  if (typeof storedSidebar?.[KEY_HIDE_SIDEBAR] !== "boolean") {
-    await storageSet({ [KEY_HIDE_SIDEBAR]: true });
-  }
-
-  // Load and initialize end screen feed setting
-  const storedEndScreenFeed = await storageGet(KEY_HIDE_END_SCREEN_FEED);
-  const initialEndScreenFeed = typeof storedEndScreenFeed?.[KEY_HIDE_END_SCREEN_FEED] === "boolean" ? storedEndScreenFeed[KEY_HIDE_END_SCREEN_FEED] : true;
-  checkboxEndScreenFeed.checked = initialEndScreenFeed;
-  if (typeof storedEndScreenFeed?.[KEY_HIDE_END_SCREEN_FEED] !== "boolean") {
-    await storageSet({ [KEY_HIDE_END_SCREEN_FEED]: true });
-  }
-
-  // Load and initialize disable autoplay setting
-  const storedDisableAutoplay = await storageGet(KEY_DISABLE_AUTOPLAY);
-  const initialDisableAutoplay = typeof storedDisableAutoplay?.[KEY_DISABLE_AUTOPLAY] === "boolean" ? storedDisableAutoplay[KEY_DISABLE_AUTOPLAY] : true;
-  checkboxDisableAutoplay.checked = initialDisableAutoplay;
-  if (typeof storedDisableAutoplay?.[KEY_DISABLE_AUTOPLAY] !== "boolean") {
-    await storageSet({ [KEY_DISABLE_AUTOPLAY]: true });
-  }
-
-  // Load and initialize hide playlist setting
-  const storedHidePlaylist = await storageGet(KEY_HIDE_PLAYLIST);
-  const initialHidePlaylist = typeof storedHidePlaylist?.[KEY_HIDE_PLAYLIST] === "boolean" ? storedHidePlaylist[KEY_HIDE_PLAYLIST] : true;
-  checkboxHidePlaylist.checked = initialHidePlaylist;
-  if (typeof storedHidePlaylist?.[KEY_HIDE_PLAYLIST] !== "boolean") {
-    await storageSet({ [KEY_HIDE_PLAYLIST]: true });
-  }
-
-  // Load and initialize hide comments setting
-  const storedHideComments = await storageGet(KEY_HIDE_COMMENTS);
-  const initialHideComments = typeof storedHideComments?.[KEY_HIDE_COMMENTS] === "boolean" ? storedHideComments[KEY_HIDE_COMMENTS] : true;
-  checkboxHideComments.checked = initialHideComments;
-  if (typeof storedHideComments?.[KEY_HIDE_COMMENTS] !== "boolean") {
-    await storageSet({ [KEY_HIDE_COMMENTS]: true });
-  }
-
-  // Load and initialize hide danmaku setting
-  const storedHideDanmaku = await storageGet(KEY_HIDE_DANMAKU);
-  const initialHideDanmaku = typeof storedHideDanmaku?.[KEY_HIDE_DANMAKU] === "boolean" ? storedHideDanmaku[KEY_HIDE_DANMAKU] : true;
-  checkboxHideDanmaku.checked = initialHideDanmaku;
-  if (typeof storedHideDanmaku?.[KEY_HIDE_DANMAKU] !== "boolean") {
-    await storageSet({ [KEY_HIDE_DANMAKU]: true });
-  }
-
-  // Load and initialize hide thumbnails setting
-  const storedHideThumbnails = await storageGet(KEY_HIDE_THUMBNAILS);
-  const initialHideThumbnails = typeof storedHideThumbnails?.[KEY_HIDE_THUMBNAILS] === "boolean" ? storedHideThumbnails[KEY_HIDE_THUMBNAILS] : true;
-  checkboxHideThumbnails.checked = initialHideThumbnails;
-  if (typeof storedHideThumbnails?.[KEY_HIDE_THUMBNAILS] !== "boolean") {
-    await storageSet({ [KEY_HIDE_THUMBNAILS]: true });
-  }
-
-  // Load and initialize hide video info setting
-  const storedHideVideoInfo = await storageGet(KEY_HIDE_VIDEO_INFO);
-  const initialHideVideoInfo = typeof storedHideVideoInfo?.[KEY_HIDE_VIDEO_INFO] === "boolean" ? storedHideVideoInfo[KEY_HIDE_VIDEO_INFO] : true;
-  checkboxHideVideoInfo.checked = initialHideVideoInfo;
-  if (typeof storedHideVideoInfo?.[KEY_HIDE_VIDEO_INFO] !== "boolean") {
-    await storageSet({ [KEY_HIDE_VIDEO_INFO]: true });
-  }
-
-  // Load and initialize hide channel info setting
-  const storedHideChannelInfo = await storageGet(KEY_HIDE_CHANNEL_INFO);
-  const initialHideChannelInfo = typeof storedHideChannelInfo?.[KEY_HIDE_CHANNEL_INFO] === "boolean" ? storedHideChannelInfo[KEY_HIDE_CHANNEL_INFO] : true;
-  checkboxHideChannelInfo.checked = initialHideChannelInfo;
-  if (typeof storedHideChannelInfo?.[KEY_HIDE_CHANNEL_INFO] !== "boolean") {
-    await storageSet({ [KEY_HIDE_CHANNEL_INFO]: true });
-  }
-
-  // Load and initialize hide ads setting
-  const storedHideAds = await storageGet(KEY_HIDE_ADS);
-  const initialHideAds = typeof storedHideAds?.[KEY_HIDE_ADS] === "boolean" ? storedHideAds[KEY_HIDE_ADS] : true;
-  checkboxHideAds.checked = initialHideAds;
-  if (typeof storedHideAds?.[KEY_HIDE_ADS] !== "boolean") {
-    await storageSet({ [KEY_HIDE_ADS]: true });
-  }
-
-  // Load and initialize hide header setting
-  const storedHideHeader = await storageGet(KEY_HIDE_HEADER);
-  const initialHideHeader = typeof storedHideHeader?.[KEY_HIDE_HEADER] === "boolean" ? storedHideHeader[KEY_HIDE_HEADER] : true;
-  checkboxHideHeader.checked = initialHideHeader;
-  if (typeof storedHideHeader?.[KEY_HIDE_HEADER] !== "boolean") {
-    await storageSet({ [KEY_HIDE_HEADER]: true });
-  }
-
-  // Apply immediately on current tab (no refresh needed).
+  // Apply current state to the active tab immediately.
   await sendSettingToTab("SET_HIDE_HOME_FEED", checkboxHomeFeed.checked);
   await sendSettingToTab("SET_HIDE_SIDEBAR", checkboxSidebar.checked);
   await sendSettingToTab("SET_HIDE_END_SCREEN_FEED", checkboxEndScreenFeed.checked);
@@ -248,6 +186,3 @@ document.addEventListener("DOMContentLoaded", async () => {
     await sendSettingToTab("SET_HIDE_HEADER", checkboxHideHeader.checked);
   });
 });
-
-
-

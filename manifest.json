@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Biliblocker",
   "version": "0.1.0",
-  "description": "Block images on bilibili.com.",
+  "description": "Hide distracting elements on bilibili.com: feed, sidebar, autoplay, comments, ads, and more.",
   "permissions": [
     "storage"
   ],
