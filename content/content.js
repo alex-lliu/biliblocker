@@ -9,6 +9,7 @@
   const KEY_HIDE_DANMAKU = "hideDanmaku";
   const KEY_HIDE_THUMBNAILS = "hideThumbnails";
   const KEY_HIDE_VIDEO_INFO = "hideVideoInfo";
+  const KEY_HIDE_CHANNEL_INFO = "hideChannelInfo";
   const STYLE_ID_HIDE_FEED2 = "biliblocker-hide-feed2";
   const STYLE_ID_HIDE_SIDEBAR = "biliblocker-hide-sidebar";
   const STYLE_ID_HIDE_END_SCREEN_FEED = "biliblocker-hide-end-screen-feed";
@@ -16,6 +17,7 @@
   const STYLE_ID_HIDE_COMMENTS = "biliblocker-hide-comments";
   const STYLE_ID_HIDE_THUMBNAILS = "biliblocker-hide-thumbnails";
   const STYLE_ID_HIDE_VIDEO_INFO = "biliblocker-hide-video-info";
+  const STYLE_ID_HIDE_CHANNEL_INFO = "biliblocker-hide-channel-info";
   let enabledHomeFeed = true;
   let enabledSidebar = true;
   let enabledEndScreenFeed = true;
@@ -26,6 +28,7 @@
   let danmakuObserver = null;
   let enabledHideThumbnails = true;
   let enabledHideVideoInfo = true;
+  let enabledHideChannelInfo = true;
   let autoplayObserver = null;
 
   function getApi() {
@@ -89,6 +92,19 @@
     const style = document.createElement("style");
     style.id = STYLE_ID_HIDE_PLAYLIST;
     style.textContent = `.video-pod { display: none !important; }`;
+    document.documentElement.appendChild(style);
+  }
+
+  function setChannelInfoHidden(hidden) {
+    const existing = document.getElementById(STYLE_ID_HIDE_CHANNEL_INFO);
+    if (!hidden) {
+      if (existing) existing.remove();
+      return;
+    }
+    if (existing) return;
+    const style = document.createElement("style");
+    style.id = STYLE_ID_HIDE_CHANNEL_INFO;
+    style.textContent = `.up-info-container { display: none !important; }`;
     document.documentElement.appendChild(style);
   }
 
@@ -176,6 +192,7 @@
     const storedHideDanmaku = await storageGet(KEY_HIDE_DANMAKU);
     const storedHideThumbnails = await storageGet(KEY_HIDE_THUMBNAILS);
     const storedHideVideoInfo = await storageGet(KEY_HIDE_VIDEO_INFO);
+    const storedHideChannelInfo = await storageGet(KEY_HIDE_CHANNEL_INFO);
 
     const enabledHomeFeedValue =
       typeof storedHomeFeed?.[KEY_HIDE_HOME_FEED] === "boolean"
@@ -222,6 +239,11 @@
         ? storedHideVideoInfo[KEY_HIDE_VIDEO_INFO]
         : true;
 
+    const enabledHideChannelInfoValue =
+      typeof storedHideChannelInfo?.[KEY_HIDE_CHANNEL_INFO] === "boolean"
+        ? storedHideChannelInfo[KEY_HIDE_CHANNEL_INFO]
+        : true;
+
     applyHomeFeedEnabled(!!enabledHomeFeedValue);
     applySidebarEnabled(!!enabledSidebarValue);
     applyEndScreenFeedEnabled(!!enabledEndScreenFeedValue);
@@ -231,6 +253,7 @@
     applyDanmakuEnabled(!!enabledHideDanmakuValue);
     applyThumbnailsEnabled(!!enabledHideThumbnailsValue);
     applyVideoInfoEnabled(!!enabledHideVideoInfoValue);
+    applyChannelInfoEnabled(!!enabledHideChannelInfoValue);
   }
 
   function initMessageListener() {
@@ -256,6 +279,8 @@
         applyThumbnailsEnabled(!!msg.enabled);
       } else if (msg.type === "SET_HIDE_VIDEO_INFO") {
         applyVideoInfoEnabled(!!msg.enabled);
+      } else if (msg.type === "SET_HIDE_CHANNEL_INFO") {
+        applyChannelInfoEnabled(!!msg.enabled);
       }
     });
   }
@@ -313,6 +338,11 @@
     if (!danmakuObserver) return;
     danmakuObserver.disconnect();
     danmakuObserver = null;
+  }
+
+  function applyChannelInfoEnabled(nextEnabled) {
+    enabledHideChannelInfo = !!nextEnabled;
+    setChannelInfoHidden(enabledHideChannelInfo);
   }
 
   function applyVideoInfoEnabled(nextEnabled) {
