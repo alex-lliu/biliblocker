@@ -10,6 +10,8 @@
   const KEY_HIDE_THUMBNAILS = "hideThumbnails";
   const KEY_HIDE_VIDEO_INFO = "hideVideoInfo";
   const KEY_HIDE_CHANNEL_INFO = "hideChannelInfo";
+  const KEY_HIDE_ADS = "hideAds";
+  const KEY_HIDE_HEADER = "hideHeader";
   const STYLE_ID_HIDE_FEED2 = "biliblocker-hide-feed2";
   const STYLE_ID_HIDE_SIDEBAR = "biliblocker-hide-sidebar";
   const STYLE_ID_HIDE_END_SCREEN_FEED = "biliblocker-hide-end-screen-feed";
@@ -18,6 +20,8 @@
   const STYLE_ID_HIDE_THUMBNAILS = "biliblocker-hide-thumbnails";
   const STYLE_ID_HIDE_VIDEO_INFO = "biliblocker-hide-video-info";
   const STYLE_ID_HIDE_CHANNEL_INFO = "biliblocker-hide-channel-info";
+  const STYLE_ID_HIDE_ADS = "biliblocker-hide-ads";
+  const STYLE_ID_HIDE_HEADER = "biliblocker-hide-header";
   let enabledHomeFeed = true;
   let enabledSidebar = true;
   let enabledEndScreenFeed = true;
@@ -29,6 +33,8 @@
   let enabledHideThumbnails = true;
   let enabledHideVideoInfo = true;
   let enabledHideChannelInfo = true;
+  let enabledHideAds = true;
+  let enabledHideHeader = true;
   let autoplayObserver = null;
 
   function getApi() {
@@ -92,6 +98,32 @@
     const style = document.createElement("style");
     style.id = STYLE_ID_HIDE_PLAYLIST;
     style.textContent = `.video-pod { display: none !important; }`;
+    document.documentElement.appendChild(style);
+  }
+
+  function setHeaderHidden(hidden) {
+    const existing = document.getElementById(STYLE_ID_HIDE_HEADER);
+    if (!hidden) {
+      if (existing) existing.remove();
+      return;
+    }
+    if (existing) return;
+    const style = document.createElement("style");
+    style.id = STYLE_ID_HIDE_HEADER;
+    style.textContent = `.bili-header { display: none !important; }`;
+    document.documentElement.appendChild(style);
+  }
+
+  function setAdsHidden(hidden) {
+    const existing = document.getElementById(STYLE_ID_HIDE_ADS);
+    if (!hidden) {
+      if (existing) existing.remove();
+      return;
+    }
+    if (existing) return;
+    const style = document.createElement("style");
+    style.id = STYLE_ID_HIDE_ADS;
+    style.textContent = `.ad-report { display: none !important; }`;
     document.documentElement.appendChild(style);
   }
 
@@ -193,6 +225,8 @@
     const storedHideThumbnails = await storageGet(KEY_HIDE_THUMBNAILS);
     const storedHideVideoInfo = await storageGet(KEY_HIDE_VIDEO_INFO);
     const storedHideChannelInfo = await storageGet(KEY_HIDE_CHANNEL_INFO);
+    const storedHideAds = await storageGet(KEY_HIDE_ADS);
+    const storedHideHeader = await storageGet(KEY_HIDE_HEADER);
 
     const enabledHomeFeedValue =
       typeof storedHomeFeed?.[KEY_HIDE_HOME_FEED] === "boolean"
@@ -244,6 +278,16 @@
         ? storedHideChannelInfo[KEY_HIDE_CHANNEL_INFO]
         : true;
 
+    const enabledHideAdsValue =
+      typeof storedHideAds?.[KEY_HIDE_ADS] === "boolean"
+        ? storedHideAds[KEY_HIDE_ADS]
+        : true;
+
+    const enabledHideHeaderValue =
+      typeof storedHideHeader?.[KEY_HIDE_HEADER] === "boolean"
+        ? storedHideHeader[KEY_HIDE_HEADER]
+        : true;
+
     applyHomeFeedEnabled(!!enabledHomeFeedValue);
     applySidebarEnabled(!!enabledSidebarValue);
     applyEndScreenFeedEnabled(!!enabledEndScreenFeedValue);
@@ -254,6 +298,8 @@
     applyThumbnailsEnabled(!!enabledHideThumbnailsValue);
     applyVideoInfoEnabled(!!enabledHideVideoInfoValue);
     applyChannelInfoEnabled(!!enabledHideChannelInfoValue);
+    applyAdsEnabled(!!enabledHideAdsValue);
+    applyHeaderEnabled(!!enabledHideHeaderValue);
   }
 
   function initMessageListener() {
@@ -281,6 +327,10 @@
         applyVideoInfoEnabled(!!msg.enabled);
       } else if (msg.type === "SET_HIDE_CHANNEL_INFO") {
         applyChannelInfoEnabled(!!msg.enabled);
+      } else if (msg.type === "SET_HIDE_ADS") {
+        applyAdsEnabled(!!msg.enabled);
+      } else if (msg.type === "SET_HIDE_HEADER") {
+        applyHeaderEnabled(!!msg.enabled);
       }
     });
   }
@@ -338,6 +388,16 @@
     if (!danmakuObserver) return;
     danmakuObserver.disconnect();
     danmakuObserver = null;
+  }
+
+  function applyHeaderEnabled(nextEnabled) {
+    enabledHideHeader = !!nextEnabled;
+    setHeaderHidden(enabledHideHeader);
+  }
+
+  function applyAdsEnabled(nextEnabled) {
+    enabledHideAds = !!nextEnabled;
+    setAdsHidden(enabledHideAds);
   }
 
   function applyChannelInfoEnabled(nextEnabled) {

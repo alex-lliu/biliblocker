@@ -8,6 +8,8 @@ const KEY_HIDE_DANMAKU = "hideDanmaku";
 const KEY_HIDE_THUMBNAILS = "hideThumbnails";
 const KEY_HIDE_VIDEO_INFO = "hideVideoInfo";
 const KEY_HIDE_CHANNEL_INFO = "hideChannelInfo";
+const KEY_HIDE_ADS = "hideAds";
+const KEY_HIDE_HEADER = "hideHeader";
 
 function getApi() {
   return globalThis.browser ?? globalThis.chrome;
@@ -71,8 +73,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   const checkboxHideThumbnails = document.getElementById("hide-thumbnails");
   const checkboxHideVideoInfo = document.getElementById("hide-video-info");
   const checkboxHideChannelInfo = document.getElementById("hide-channel-info");
+  const checkboxHideAds = document.getElementById("hide-ads");
+  const checkboxHideHeader = document.getElementById("hide-header");
 
-  if (!(checkboxHomeFeed instanceof HTMLInputElement) || !(checkboxSidebar instanceof HTMLInputElement) || !(checkboxEndScreenFeed instanceof HTMLInputElement) || !(checkboxDisableAutoplay instanceof HTMLInputElement) || !(checkboxHidePlaylist instanceof HTMLInputElement) || !(checkboxHideComments instanceof HTMLInputElement) || !(checkboxHideDanmaku instanceof HTMLInputElement) || !(checkboxHideThumbnails instanceof HTMLInputElement) || !(checkboxHideVideoInfo instanceof HTMLInputElement) || !(checkboxHideChannelInfo instanceof HTMLInputElement)) return;
+  if (!(checkboxHomeFeed instanceof HTMLInputElement) || !(checkboxSidebar instanceof HTMLInputElement) || !(checkboxEndScreenFeed instanceof HTMLInputElement) || !(checkboxDisableAutoplay instanceof HTMLInputElement) || !(checkboxHidePlaylist instanceof HTMLInputElement) || !(checkboxHideComments instanceof HTMLInputElement) || !(checkboxHideDanmaku instanceof HTMLInputElement) || !(checkboxHideThumbnails instanceof HTMLInputElement) || !(checkboxHideVideoInfo instanceof HTMLInputElement) || !(checkboxHideChannelInfo instanceof HTMLInputElement) || !(checkboxHideAds instanceof HTMLInputElement) || !(checkboxHideHeader instanceof HTMLInputElement)) return;
 
   // Load and initialize home feed setting
   const storedHomeFeed = await storageGet(KEY_HIDE_HOME_FEED);
@@ -154,6 +158,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     await storageSet({ [KEY_HIDE_CHANNEL_INFO]: true });
   }
 
+  // Load and initialize hide ads setting
+  const storedHideAds = await storageGet(KEY_HIDE_ADS);
+  const initialHideAds = typeof storedHideAds?.[KEY_HIDE_ADS] === "boolean" ? storedHideAds[KEY_HIDE_ADS] : true;
+  checkboxHideAds.checked = initialHideAds;
+  if (typeof storedHideAds?.[KEY_HIDE_ADS] !== "boolean") {
+    await storageSet({ [KEY_HIDE_ADS]: true });
+  }
+
+  // Load and initialize hide header setting
+  const storedHideHeader = await storageGet(KEY_HIDE_HEADER);
+  const initialHideHeader = typeof storedHideHeader?.[KEY_HIDE_HEADER] === "boolean" ? storedHideHeader[KEY_HIDE_HEADER] : true;
+  checkboxHideHeader.checked = initialHideHeader;
+  if (typeof storedHideHeader?.[KEY_HIDE_HEADER] !== "boolean") {
+    await storageSet({ [KEY_HIDE_HEADER]: true });
+  }
+
   // Apply immediately on current tab (no refresh needed).
   await sendSettingToTab("SET_HIDE_HOME_FEED", checkboxHomeFeed.checked);
   await sendSettingToTab("SET_HIDE_SIDEBAR", checkboxSidebar.checked);
@@ -165,6 +185,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   await sendSettingToTab("SET_HIDE_THUMBNAILS", checkboxHideThumbnails.checked);
   await sendSettingToTab("SET_HIDE_VIDEO_INFO", checkboxHideVideoInfo.checked);
   await sendSettingToTab("SET_HIDE_CHANNEL_INFO", checkboxHideChannelInfo.checked);
+  await sendSettingToTab("SET_HIDE_ADS", checkboxHideAds.checked);
+  await sendSettingToTab("SET_HIDE_HEADER", checkboxHideHeader.checked);
 
   checkboxHomeFeed.addEventListener("change", async () => {
     await storageSet({ [KEY_HIDE_HOME_FEED]: checkboxHomeFeed.checked });
@@ -214,6 +236,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   checkboxHideChannelInfo.addEventListener("change", async () => {
     await storageSet({ [KEY_HIDE_CHANNEL_INFO]: checkboxHideChannelInfo.checked });
     await sendSettingToTab("SET_HIDE_CHANNEL_INFO", checkboxHideChannelInfo.checked);
+  });
+
+  checkboxHideAds.addEventListener("change", async () => {
+    await storageSet({ [KEY_HIDE_ADS]: checkboxHideAds.checked });
+    await sendSettingToTab("SET_HIDE_ADS", checkboxHideAds.checked);
+  });
+
+  checkboxHideHeader.addEventListener("change", async () => {
+    await storageSet({ [KEY_HIDE_HEADER]: checkboxHideHeader.checked });
+    await sendSettingToTab("SET_HIDE_HEADER", checkboxHideHeader.checked);
   });
 });
 
