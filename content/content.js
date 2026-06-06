@@ -425,10 +425,28 @@
     }
   }
 
+  function injectDefaultStyles() {
+    setFeed2Hidden(true);
+    setSidebarHidden(true);
+    setEndScreenFeedHidden(true);
+    setPlaylistHidden(true);
+    setCommentsHidden(true);
+    setThumbnailsHidden(true);
+    setVideoInfoHidden(true);
+    setChannelInfoHidden(true);
+    setAdsHidden(true);
+    setHeaderHidden(true);
+  }
+
   function init() {
     initMessageListener();
     initSettings();
   }
+
+  // Inject all hide styles immediately (synchronously at document_start) so
+  // elements are never visible before settings load. initSettings will remove
+  // any style the user has disabled.
+  injectDefaultStyles();
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init, { once: true });
