@@ -312,6 +312,11 @@
     inputs.forEach((el) => el.click());
   }
 
+  function turnOnDanmaku() {
+    const inputs = document.querySelectorAll(".bui-danmaku-switch-input:not(:checked)");
+    inputs.forEach((el) => el.click());
+  }
+
   function startObservingDanmaku() {
     if (danmakuObserver) return;
     danmakuObserver = new MutationObserver(() => {
@@ -358,6 +363,7 @@
       startObservingDanmaku();
     } else {
       stopObservingDanmaku();
+      turnOnDanmaku();
     }
   }
 
