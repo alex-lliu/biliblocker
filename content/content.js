@@ -12,6 +12,7 @@
   const KEY_HIDE_CHANNEL_INFO = "hideChannelInfo";
   const KEY_HIDE_ADS = "hideAds";
   const KEY_HIDE_HEADER = "hideHeader";
+  const KEY_HIDE_TRENDINGS = "hideTrendings";
   const STYLE_ID_HIDE_FEED2 = "biliblocker-hide-feed2";
   const STYLE_ID_HIDE_SIDEBAR = "biliblocker-hide-sidebar";
   const STYLE_ID_HIDE_END_SCREEN_FEED = "biliblocker-hide-end-screen-feed";
@@ -22,6 +23,7 @@
   const STYLE_ID_HIDE_CHANNEL_INFO = "biliblocker-hide-channel-info";
   const STYLE_ID_HIDE_ADS = "biliblocker-hide-ads";
   const STYLE_ID_HIDE_HEADER = "biliblocker-hide-header";
+  const STYLE_ID_HIDE_TRENDINGS = "biliblocker-hide-trendings";
   let enabledHomeFeed = true;
   let enabledSidebar = true;
   let enabledEndScreenFeed = true;
@@ -35,6 +37,7 @@
   let enabledHideChannelInfo = true;
   let enabledHideAds = true;
   let enabledHideHeader = true;
+  let enabledHideTrendings = true;
   let autoplayObserver = null;
 
   function getApi() {
@@ -98,6 +101,19 @@
     const style = document.createElement("style");
     style.id = STYLE_ID_HIDE_PLAYLIST;
     style.textContent = `.video-pod { display: none !important; }`;
+    document.documentElement.appendChild(style);
+  }
+
+  function setTrendingsHidden(hidden) {
+    const existing = document.getElementById(STYLE_ID_HIDE_TRENDINGS);
+    if (!hidden) {
+      if (existing) existing.remove();
+      return;
+    }
+    if (existing) return;
+    const style = document.createElement("style");
+    style.id = STYLE_ID_HIDE_TRENDINGS;
+    style.textContent = `.bili-dyn-search-trendings { display: none !important; }`;
     document.documentElement.appendChild(style);
   }
 
@@ -219,7 +235,7 @@
       KEY_HIDE_HOME_FEED, KEY_HIDE_SIDEBAR, KEY_HIDE_END_SCREEN_FEED,
       KEY_DISABLE_AUTOPLAY, KEY_HIDE_PLAYLIST, KEY_HIDE_COMMENTS,
       KEY_HIDE_DANMAKU, KEY_HIDE_THUMBNAILS, KEY_HIDE_VIDEO_INFO,
-      KEY_HIDE_CHANNEL_INFO, KEY_HIDE_ADS, KEY_HIDE_HEADER,
+      KEY_HIDE_CHANNEL_INFO, KEY_HIDE_ADS, KEY_HIDE_HEADER, KEY_HIDE_TRENDINGS,
     ]);
 
     const val = (key) => typeof stored?.[key] === "boolean" ? stored[key] : true;
@@ -236,6 +252,7 @@
     applyChannelInfoEnabled(val(KEY_HIDE_CHANNEL_INFO));
     applyAdsEnabled(val(KEY_HIDE_ADS));
     applyHeaderEnabled(val(KEY_HIDE_HEADER));
+    applyTrendingsEnabled(val(KEY_HIDE_TRENDINGS));
   }
 
   function initMessageListener() {
@@ -267,6 +284,8 @@
         applyAdsEnabled(!!msg.enabled);
       } else if (msg.type === "SET_HIDE_HEADER") {
         applyHeaderEnabled(!!msg.enabled);
+      } else if (msg.type === "SET_HIDE_TRENDINGS") {
+        applyTrendingsEnabled(!!msg.enabled);
       }
     });
   }
@@ -331,6 +350,11 @@
     danmakuObserver = null;
   }
 
+  function applyTrendingsEnabled(nextEnabled) {
+    enabledHideTrendings = !!nextEnabled;
+    setTrendingsHidden(enabledHideTrendings);
+  }
+
   function applyHeaderEnabled(nextEnabled) {
     enabledHideHeader = !!nextEnabled;
     setHeaderHidden(enabledHideHeader);
@@ -378,6 +402,7 @@
     setChannelInfoHidden(true);
     setAdsHidden(true);
     setHeaderHidden(true);
+    setTrendingsHidden(true);
   }
 
   function init() {
